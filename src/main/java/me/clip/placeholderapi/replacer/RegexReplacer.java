@@ -41,10 +41,15 @@ public final class RegexReplacer implements Replacer {
   }
 
 
+  @Override
+  public @NotNull String apply(@NotNull String text, @Nullable OfflinePlayer player, @NotNull Function<String, @Nullable PlaceholderExpansion> lookup) {
+    return this.apply(text, player, lookup, true);
+  }
+
   @NotNull
   @Override
   public String apply(@NotNull final String text, @Nullable final OfflinePlayer player,
-      @NotNull final Function<String, @Nullable PlaceholderExpansion> lookup) {
+      @NotNull final Function<String, @Nullable PlaceholderExpansion> lookup, boolean translateColors) {
     final Matcher matcher = pattern.matcher(text);
     if (!matcher.find()) {
       return text;
@@ -66,7 +71,7 @@ public final class RegexReplacer implements Replacer {
     }
     while (matcher.find());
 
-    return ChatColor.translateAlternateColorCodes('&', matcher.appendTail(builder).toString());
+    return translateColors ? ChatColor.translateAlternateColorCodes('&', matcher.appendTail(builder).toString()) : matcher.appendTail(builder).toString();
   }
 
 }

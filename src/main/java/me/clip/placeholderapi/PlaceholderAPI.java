@@ -21,13 +21,6 @@
 package me.clip.placeholderapi;
 
 import com.google.common.collect.ImmutableSet;
-import java.util.List;
-import java.util.Locale;
-import java.util.Map;
-import java.util.Set;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import me.clip.placeholderapi.expansion.PlaceholderExpansion;
 import me.clip.placeholderapi.expansion.Relational;
 import me.clip.placeholderapi.expansion.manager.LocalExpansionManager;
@@ -40,6 +33,14 @@ import org.bukkit.entity.Player;
 import org.bukkit.plugin.Plugin;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 public final class PlaceholderAPI {
 
@@ -176,33 +177,7 @@ public final class PlaceholderAPI {
    * @return The text containing the parsed relational placeholders
    */
   public static String setRelationalPlaceholders(Player one, Player two, String text) {
-    final Matcher matcher = RELATIONAL_PLACEHOLDER_PATTERN.matcher(text);
-
-    while (matcher.find()) {
-      final String format = matcher.group(2);
-      final int index = format.indexOf("_");
-
-      if (index <= 0 || index >= format.length()) {
-        continue;
-      }
-
-      String identifier = format.substring(0, index).toLowerCase(Locale.ROOT);
-      String params = format.substring(index + 1);
-      final PlaceholderExpansion expansion = PlaceholderAPIPlugin.getInstance()
-          .getLocalExpansionManager().getExpansion(identifier);
-
-      if (!(expansion instanceof Relational)) {
-        continue;
-      }
-
-      final String value = ((Relational) expansion).onPlaceholderRequest(one, two, params);
-
-      if (value != null) {
-        text = text.replaceAll(Pattern.quote(matcher.group()), Matcher.quoteReplacement(value));
-      }
-    }
-
-    return Msg.color(text);
+    return setRelationalPlaceholders(one, two, text, true);
   }
 
   /**
@@ -383,6 +358,7 @@ public final class PlaceholderAPI {
   @Deprecated
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static boolean unregisterPlaceholderHook(String identifier) {
+
     PlaceholderAPIPlugin.getInstance().getLogger().warning(identifier
         + " is attempting to unregister placeholders through the PlaceholderAPI class which is no longer supported!");
     return false;
@@ -423,7 +399,7 @@ public final class PlaceholderAPI {
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static String setPlaceholders(OfflinePlayer player,
       String text, Pattern pattern, boolean colorize) {
-    return setPlaceholders(player, text);
+    return setPlaceholders(player, text, colorize);
   }
 
   /**
@@ -439,7 +415,7 @@ public final class PlaceholderAPI {
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static List<String> setPlaceholders(OfflinePlayer player,
       List<String> text, Pattern pattern, boolean colorize) {
-    return setPlaceholders(player, text);
+    return setPlaceholders(player, text, colorize);
   }
 
   /**
@@ -454,7 +430,7 @@ public final class PlaceholderAPI {
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static List<String> setPlaceholders(OfflinePlayer player, List<String> text,
       boolean colorize) {
-    return setPlaceholders(player, text);
+    return text.stream().map(line -> setPlaceholders(player, line, colorize)).collect(Collectors.toList());
   }
 
   /**
@@ -482,7 +458,8 @@ public final class PlaceholderAPI {
   @Deprecated
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static String setPlaceholders(Player player, String text, boolean colorize) {
-    return setPlaceholders(player, text);
+    return REPLACER_PERCENT.apply(text, player,
+            PlaceholderAPIPlugin.getInstance().getLocalExpansionManager()::getExpansion, colorize);
   }
 
   /**
@@ -496,7 +473,7 @@ public final class PlaceholderAPI {
   @Deprecated
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static List<String> setPlaceholders(Player player, List<String> text, boolean colorize) {
-    return setPlaceholders(player, text);
+    return text.stream().map(line -> setPlaceholders(player, line, colorize)).collect(Collectors.toList());
   }
 
   /**
@@ -510,7 +487,8 @@ public final class PlaceholderAPI {
   @Deprecated
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static String setPlaceholders(OfflinePlayer player, String text, boolean colorize) {
-    return setPlaceholders(player, text);
+    return REPLACER_PERCENT.apply(text, player,
+            PlaceholderAPIPlugin.getInstance().getLocalExpansionManager()::getExpansion, colorize);
   }
 
   /**
@@ -539,7 +517,8 @@ public final class PlaceholderAPI {
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static List<String> setBracketPlaceholders(OfflinePlayer player, List<String> text,
       boolean colorize) {
-    return setBracketPlaceholders(player, text);
+    return text.stream().map(line -> setBracketPlaceholders(player, line, colorize))
+            .collect(Collectors.toList());
   }
 
   /**
@@ -553,7 +532,8 @@ public final class PlaceholderAPI {
   @Deprecated
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static String setBracketPlaceholders(OfflinePlayer player, String text, boolean colorize) {
-    return setBracketPlaceholders(player, text);
+    return REPLACER_BRACKET.apply(text, player,
+            PlaceholderAPIPlugin.getInstance().getLocalExpansionManager()::getExpansion, colorize);
   }
 
   /**
@@ -567,7 +547,8 @@ public final class PlaceholderAPI {
   @Deprecated
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static String setBracketPlaceholders(Player player, String text, boolean colorize) {
-    return setBracketPlaceholders(player, text);
+    return REPLACER_BRACKET.apply(text, player,
+            PlaceholderAPIPlugin.getInstance().getLocalExpansionManager()::getExpansion, colorize);
   }
 
   /**
@@ -582,7 +563,8 @@ public final class PlaceholderAPI {
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static List<String> setBracketPlaceholders(Player player, List<String> text,
       boolean colorize) {
-    return setBracketPlaceholders(player, text);
+    return text.stream().map(line -> setBracketPlaceholders(player, line, colorize))
+            .collect(Collectors.toList());
   }
 
   /**
@@ -600,7 +582,33 @@ public final class PlaceholderAPI {
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static String setRelationalPlaceholders(Player one, Player two, String text,
       boolean colorize) {
-    return setRelationalPlaceholders(one, two, text);
+    final Matcher matcher = RELATIONAL_PLACEHOLDER_PATTERN.matcher(text);
+
+    while (matcher.find()) {
+      final String format = matcher.group(2);
+      final int index = format.indexOf("_");
+
+      if (index <= 0 || index >= format.length()) {
+        continue;
+      }
+
+      String identifier = format.substring(0, index).toLowerCase(Locale.ROOT);
+      String params = format.substring(index + 1);
+      final PlaceholderExpansion expansion = PlaceholderAPIPlugin.getInstance()
+              .getLocalExpansionManager().getExpansion(identifier);
+
+      if (!(expansion instanceof Relational)) {
+        continue;
+      }
+
+      final String value = ((Relational) expansion).onPlaceholderRequest(one, two, params);
+
+      if (value != null) {
+        text = text.replaceAll(Pattern.quote(matcher.group()), Matcher.quoteReplacement(value));
+      }
+    }
+
+    return colorize ? Msg.color(text) : text;
   }
 
   /**
@@ -618,6 +626,7 @@ public final class PlaceholderAPI {
   @ApiStatus.ScheduledForRemoval(inVersion = "2.13.0")
   public static List<String> setRelationalPlaceholders(Player one, Player two, List<String> text,
       boolean colorize) {
-    return setRelationalPlaceholders(one, two, text);
+    return text.stream().map(line -> setRelationalPlaceholders(one, two, line, colorize))
+            .collect(Collectors.toList());
   }
 }

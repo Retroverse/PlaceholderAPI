@@ -38,10 +38,15 @@ public final class CharsReplacer implements Replacer {
   }
 
 
+  @Override
+  public @NotNull String apply(@NotNull String text, @Nullable OfflinePlayer player, @NotNull Function<String, @Nullable PlaceholderExpansion> lookup) {
+    return this.apply(text, player, lookup, true);
+  }
+
   @NotNull
   @Override
   public String apply(@NotNull final String text, @Nullable final OfflinePlayer player,
-      @NotNull final Function<String, @Nullable PlaceholderExpansion> lookup) {
+      @NotNull final Function<String, @Nullable PlaceholderExpansion> lookup, boolean translateColors) {
     final char[] chars = text.toCharArray();
     final StringBuilder builder = new StringBuilder(text.length());
 
@@ -128,7 +133,7 @@ public final class CharsReplacer implements Replacer {
         continue;
       }
 
-      builder.append(ChatColor.translateAlternateColorCodes('&', replacement));
+      builder.append(translateColors ? ChatColor.translateAlternateColorCodes('&', replacement) : replacement);
     }
 
     return builder.toString();

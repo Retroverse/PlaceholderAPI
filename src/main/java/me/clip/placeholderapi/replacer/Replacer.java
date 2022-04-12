@@ -30,7 +30,11 @@ public interface Replacer {
 
   @NotNull
   String apply(@NotNull final String text, @Nullable final OfflinePlayer player,
-      @NotNull final Function<String, @Nullable PlaceholderExpansion> lookup);
+               @NotNull final Function<String, @Nullable PlaceholderExpansion> lookup);
+
+  @NotNull
+  String apply(@NotNull final String text, @Nullable final OfflinePlayer player,
+               @NotNull final Function<String, @Nullable PlaceholderExpansion> lookup, boolean translateColors);
 
 
   enum Closure {
